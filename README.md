@@ -1,0 +1,2 @@
+KTP (Kharagpur Transport Protocol)
+A custom, reliable transport protocol built over UDP. While UDP is an unreliable, connectionless protocol offering speed, TCP—though reliable and connection-oriented—is slower due to its connection setup overhead. KTP bridges this gap by using UDP for speed and implementing reliability at the application level. Features include sliding window flow control, retransmissions, acknowledgments, and simulated packet loss. Built using shared memory and multithreading for concurrent socket handling.
