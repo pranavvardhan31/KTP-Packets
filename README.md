@@ -26,19 +26,18 @@ KTP (Kharagpur Transport Protocol) aims to provide TCP-like reliability on top o
 - `ktp.c`, `ktp_utils.c` — Core implementation of KTP socket API and utilities
 - `Makefile` — Compilation and cleanup automation
 
-## How to Run
+### How to Run
 
-### Step 1: Initialize KTP Sockets (Terminal 1)
-
+# Step 1: Initialize KTP Sockets (Terminal 1)
 ```bash
 make clean
 make all
 ./initksocket
 
-### Step 2: Start Sender (Terminal 2)
+# Step 2: Start Sender (Terminal 2)
 ./user1
 # Enter a valid input .txt file present in the current folder
 
-### Step 3: Start Receiver (Terminal 3)
+# Step 3: Start Receiver (Terminal 3)
 ./user2
-The received data will be saved in received.txt in the current directory.
+# The received data will be saved in received.txt in the current directory.
