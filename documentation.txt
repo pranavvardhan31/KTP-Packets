@@ -1,0 +1,131 @@
+/*==========================================================
+Assignment 4 Submission 
+Name: Chiluveru Pranav Vardhan
+Roll number: 22CS10019 
+
+Commands to execute :-
+
+1) Terminal 1
+    $ make clean
+    $ make all
+    $ ./initksocket
+
+2) Terminal 2 (Sender)
+    $ ./user1
+    // Should enter a vaild .txt file name in the current folder (input.txt)
+
+3) Terminal 3 (Receiver)
+    $ ./user2
+
+received.txt will be generated in the current folder
+and total transmissions can be seen after clicking (ctrl+c)
+in terminal 1
+==========================================================*/
+
+
++--------------------------------+
+| User Functions for KTP Sockets |
++--------------------------------+
+
+1. int k_socket();
+    - Creates a new KTP socket by initializing shared memory and locking an available socket.
+    - Returns the socket ID if successful, or -1 if no sockets are available.
+
+2. int k_bind(int ktp_sock, struct sockaddr_in *myaddr, struct sockaddr_in *cliaddr);
+    - Binds the given KTP socket to a local and remote address.
+    - Returns 1 on successful binding, -1 if the socket is inactive or owned by another process.
+
+3. int k_close(int ktp_sock);
+    - Closes the specified KTP socket after ensuring all pending data is processed.
+    - Returns 1 on success, -1 if the socket is already closed or invalid.
+
+4. int k_sendto(int fc, char *buf, int len);
+    - Adds a packet to the sending window of the specified socket.
+    - Returns the number of bytes added, or -1 if the buffer is full or the socket is inactive.
+
+5. int k_recvfrom(int fd, char *buf, int len);
+    - Retrieves data from the receiving window of the specified socket.
+    - Returns the number of bytes received, or -1 if no data is available or the socket is inactive.
+
+
++----------------------------------+
+| Background Threads and Functions |
++----------------------------------+
+
+1. cleanup_handler(int sig)
+   - Handles SIGINT (Ctrl+C) to clean up shared memory.
+   - Detaches shared memory and removes it if necessary.
+
+2. dropMessage(float p)
+   - Returns whether a message should be dropped based on probability p.
+   - Uses rand() to determine drop probability.
+
+3. attempt_binding(int sock_index)
+    - Binds a socket if it is active and not already bound.
+    - Uses bind() to assign the socket to a local address.
+    - Logs success or failure using printf() and perror().
+
+4. reset_socket(int sock_index)
+    - Closes and reinitializes a UDP socket.
+    - Creates a new non-blocking socket using fcntl().
+    - Logs success or failure of socket recreation.
+
+5. garbage_collector()
+   - Iterates over sockets to bind unbound ones.
+   - Cleans up sockets associated with terminated processes.
+   - Resets sockets if necessary and ensures proper locking with mutexes.
+
+6. thread_S() (Sender Thread)
+   - Monitors shared memory and calls garbage_collector().
+   - Updates window size and buffer size dynamically for flow control.
+   - Resends packets on timeout and sends available packets.
+
+7. send_packet(KTP_Socket *fd, KTP_Packet *pk)
+    - Sends a packet over a UDP socket.
+    - Checks if the packet needs to be resent based on a timeout.
+    - Formats the packet data and sends it via sendto().
+
+8. process_packet(int i, int seqNumber, char *temp_data, int len, pthread_mutex_t *mutex_ptr)
+    - Handles incoming data packets.
+    - Checks for duplicate packets and resends acknowledgment if necessary.
+    - Stores the packet in the receive window and updates sequence tracking.    
+    - If the packet is in order, it updates the expected sequence number and sends an acknowledgment.
+
+9. process_ack_packet(int i, int seqNumber, int len, pthread_mutex_t *mutex_ptr)
+    - Processes acknowledgment packets.
+    - Updates the sender's sliding window based on received acknowledgments.
+    - Handles duplicate acknowledgments and ensures the sender's buffer is managed correctly.
+
+10. thread_R() (Receiver Thread)
+    - Continuously listens for incoming packets using select().
+    - Iterates over all active sockets and adds them to fd_set.
+    - Calls recvfrom() to receive data from the UDP socket.
+    - Parses the received packet and processes it.
+    - Calls process_packet() if it's a data packet.
+    - Calls process_ack_packet() if it's an acknowledgment.
+    - Drops packets randomly based on dropMessage(P) to simulate network loss.
+
+11. main() Function
+    - Initializes shared memory if not already initialized.
+    - Creates sender (thread_S) and receiver (thread_R) threads.
+    - Waits for both threads to complete execution using pthread_join().
+    - Handles SIGINT signal to clean up resources before exiting.
+
+
++--------------------------------------------------------------------+
+| P (drop probability) vs Total Transmissions of a file of size 10KB |
++--------------------------------------------------------------------+
+
++---------------------------------------+
+|   P    |      Total Transmissions     |
+|        |                              |
+|  0.1   |         1024                 |
+|        |                              |
+|  0.2   |         2737                 |
+|        |                              |
+|  0.3   |         3929                 |
+|        |                              |
+|  0.4   |         5623                 |
+|        |                              |
+|  0.5   |         10741                |       
++---------------------------------------+
